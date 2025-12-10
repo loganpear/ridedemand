@@ -1,0 +1,14 @@
+# Editor / OS junk
+.idea/
+.DS_Store
+
+# Python artifacts
+__pycache__/
+*.pyc
+
+# Local databases
+*.db
+
+# Virtualenvs
+.venv/
+env/
