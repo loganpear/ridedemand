@@ -1,0 +1,46 @@
+services:
+  user:
+    image: user
+    container_name: user
+    build:
+      context: .
+      dockerfile: users/Dockerfile.users
+    ports:
+      - "9000:5000"
+    networks:
+      - ridedemand
+  availability:
+    image: availability
+    container_name: availability
+    build:
+      context: .
+      dockerfile: availability/Dockerfile.availability
+    ports:
+      - "9001:5000"
+    networks:
+      - ridedemand
+  reservations:
+    image: reservations
+    container_name: reservations
+    build:
+      context: .
+      dockerfile: reservations/Dockerfile.reservations
+    ports:
+      - "9002:5000"
+    networks:
+      - ridedemand
+  payments:
+    image: payments
+    container_name: payments
+    build:
+      context: .
+      dockerfile: payments/Dockerfile.payments
+    ports:
+      - "9003:5000"
+    networks:
+      - ridedemand
+
+networks:
+  ridedemand:
+    driver: bridge
+    
