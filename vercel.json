@@ -1,26 +1,4 @@
 {
-  "builds": [
-    {
-      "src": "frontend/package.json",
-      "use": "@vercel/static-build"
-    },
-    {
-      "src": "api/users/index.py",
-      "use": "@vercel/python"
-    },
-    {
-      "src": "api/availability/index.py",
-      "use": "@vercel/python"
-    },
-    {
-      "src": "api/reservations/index.py",
-      "use": "@vercel/python"
-    },
-    {
-      "src": "api/payments/index.py",
-      "use": "@vercel/python"
-    }
-  ],
   "rewrites": [
     {
       "source": "/api/users/(.*)",
