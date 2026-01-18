@@ -50,7 +50,6 @@ def clear():
 	if os.path.exists(db_name):
 		os.remove(db_name)
 	create_db()
-	create_demo_user()
 	print("Data base has been cleared and recreated")
 	return "The database has been cleared"
 
@@ -58,27 +57,29 @@ def clear():
 def create_demo_user():
 	"""Create a demo user for the application."""
 	try:
-		if is_unique_username("demo"):
-			# arguments are valid
-			salt = "frontend-salt"
-			pre_hashed = ("Password123" + salt).encode("utf-8")
-			password_hash = hashlib.sha256(pre_hashed).hexdigest()
+		# arguments are valid
+		salt = "frontend-salt"
+		pre_hashed = ("Password123" + salt).encode("utf-8")
+		password_hash = hashlib.sha256(pre_hashed).hexdigest()
 
-			# store user info in the database
-			conn = get_db()
-			curr = conn.cursor()
+		# store user info in the database
+		conn = get_db()
+		curr = conn.cursor()
 
-			curr.execute("""
-				INSERT INTO users VALUES(?,?,?,?,?,?,?,?);
-				""",("demo@example.com", "Demo", "User", "demo",
-					 salt, 0, 0, 0))
+		curr.execute("""
+			INSERT INTO users VALUES(?,?,?,?,?,?,?,?);
+			""",("demo@example.com", "Demo", "User", "demo",
+					salt, 0, 0, 0))
 
-			curr.execute("""
-				INSERT INTO passwords VALUES(?,?,?);
-				""", ("demo@example.com", password_hash, 1))
+		curr.execute("""
+			INSERT INTO passwords VALUES(?,?,?);
+			""", ("demo@example.com", password_hash, 1))
 
-			conn.commit()
-			conn.close()
+		conn.commit()
+		conn.close()
+	except sqlite3.IntegrityError:
+		# demo user already exists
+		pass
 	except Exception as e:
 		print("Error in create_demo_user:", e)
 		try:
