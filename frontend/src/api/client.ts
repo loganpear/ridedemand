@@ -26,7 +26,7 @@ export type ReservationSummary = {
   status: string;
 };
 
-const USER_BASE = "/api/user";
+const USER_BASE = "/api/users";
 const AVAIL_BASE = "/api/availability";
 const RES_BASE = "/api/reservations";
 const PAY_BASE = "/api/payments";
