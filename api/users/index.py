@@ -563,8 +563,3 @@ def view():
 			"last_name": user["last_name"]
 		}
 	})
-
-
-
-
-

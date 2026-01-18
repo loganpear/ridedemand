@@ -1,4 +1,13 @@
 services:
+  frontend:
+    container_name: frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "5173:5173"
+    networks:
+      - ridedemand
   user:
     image: user
     container_name: user

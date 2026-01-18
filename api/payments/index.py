@@ -149,7 +149,7 @@ def view():
 	username = get_username_from_jwt(jwt)
 
 	try:
-		conn = get_db()
+_db()
 		curr = conn.cursor()
 
 		curr.execute("""
@@ -230,6 +230,3 @@ def transfer():
 		except:
 			pass
 		return json.dumps({"status": 2})
-
-
-

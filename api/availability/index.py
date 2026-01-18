@@ -244,6 +244,3 @@ def remove_availability() -> str:
 		except Exception:
 			pass
 		return json.dumps({"status": 2, "error": "INTERNAL_ERROR"})
-
-
-

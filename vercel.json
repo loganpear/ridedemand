@@ -3,24 +3,40 @@
     {
       "src": "frontend/package.json",
       "use": "@vercel/static-build"
+    },
+    {
+      "src": "api/users/index.py",
+      "use": "@vercel/python"
+    },
+    {
+      "src": "api/availability/index.py",
+      "use": "@vercel/python"
+    },
+    {
+      "src": "api/reservations/index.py",
+      "use": "@vercel/python"
+    },
+    {
+      "src": "api/payments/index.py",
+      "use": "@vercel/python"
     }
   ],
   "rewrites": [
     {
       "source": "/api/users/(.*)",
-      "destination": "http://localhost:9000/api/users/$1"
+      "destination": "/api/users/index.py"
     },
     {
       "source": "/api/availability/(.*)",
-      "destination": "http://localhost:9001/api/availability/$1"
+      "destination": "/api/availability/index.py"
     },
     {
       "source": "/api/reservations/(.*)",
-      "destination": "http://localhost:9002/api/reservations/$1"
+      "destination": "/api/reservations/index.py"
     },
     {
       "source": "/api/payments/(.*)",
-      "destination": "http://localhost:9003/api/payments/$1"
+      "destination": "/api/payments/index.py"
     },
     {
       "source": "/(.*)",

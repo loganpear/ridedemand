@@ -230,6 +230,3 @@ def view():
 			pass
 
 		return json.dumps({"status": 2, "data": "NULL"})
-
-
-
