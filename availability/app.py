@@ -120,7 +120,7 @@ def listing() -> str:
 @app.route('/search', methods=['GET'])
 def search() -> str:
 	"""
-	Search for available ride listings on a specific date for a rider.
+	Search for available ride listings on a specific date for an authenticated user.
 
 	Query parameters:
 	- ride_date: ISO date string (YYYY-MM-DD)
@@ -137,13 +137,14 @@ def search() -> str:
 
 	conn: Optional[sqlite3.Connection] = None
 	try:
-		# ensure the user is valid and a rider
+		# ensure the user exists (drivers and riders can both search)
 		data = requests.get(
 			"http://user:5000/get_driver_status",
 			params={"username": rider_username}
 		).json()
-		if data.get("driver") != 0:
-			return json.dumps({"status": 2, "error": "NOT_RIDER", "data": listings})
+		driver_flag = data.get("driver")
+		if driver_flag not in (0, 1):
+			return json.dumps({"status": 2, "error": "USER_NOT_FOUND", "data": listings})
 
 		# get price and listing id
 		conn = get_db()

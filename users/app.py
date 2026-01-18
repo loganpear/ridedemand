@@ -342,6 +342,43 @@ def get_driver_status():
 		return json.dumps({"driver": None})
 
 
+@app.route('/set_driver_status', methods=['POST'])
+def set_driver_status():
+	"""
+	Update the driver's status (1 for driver, 0 for rider) for the authenticated user.
+	Requires a valid JWT matching the provided username.
+	"""
+	username = request.form.get("username")
+	driver_bool = request.form.get("driver")
+	jwt = request.headers.get('Authorization')
+
+	if not is_valid_jwt(jwt, username):
+		return json.dumps({"status": 2})
+
+	if driver_bool and driver_bool.lower() == "true":
+		driver_int = 1
+	else:
+		driver_int = 0
+
+	try:
+		conn = get_db()
+		curr = conn.cursor()
+		curr.execute("""
+			UPDATE users SET driver = ? WHERE username = ?;
+			""", (driver_int, username))
+		conn.commit()
+		conn.close()
+		return json.dumps({"status": 1})
+
+	except Exception as e:
+		print("Error in set_driver_status:", e)
+		try:
+			conn.close()
+		except:
+			pass
+		return json.dumps({"status": 2})
+
+
 def password_correct(username, password):
 	"""Test if current password in correct"""
 	if not password or not username:

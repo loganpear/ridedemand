@@ -1,0 +1,33 @@
+{
+  "builds": [
+    {
+      "src": "frontend/package.json",
+      "use": "@vercel/static-build",
+      "options": {
+        "distDir": "frontend/dist"
+      }
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/users/(.*)",
+      "destination": "http://localhost:9000/api/users/$1"
+    },
+    {
+      "source": "/api/availability/(.*)",
+      "destination": "http://localhost:9001/api/availability/$1"
+    },
+    {
+      "source": "/api/reservations/(.*)",
+      "destination": "http://localhost:9002/api/reservations/$1"
+    },
+    {
+      "source": "/api/payments/(.*)",
+      "destination": "http://localhost:9003/api/payments/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
