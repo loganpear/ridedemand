@@ -214,6 +214,11 @@ function LoginPage({
     }
   }
 
+  function autofillDemoUser() {
+    setUsername("demo");
+    setPassword("Password123");
+  }
+
   return (
     <section>
       <h2>Log in</h2>
@@ -233,6 +238,9 @@ function LoginPage({
         </label>
         <button type="submit" disabled={loading}>
           {loading ? "Logging in..." : "Log in"}
+        </button>
+        <button type="button" onClick={autofillDemoUser}>
+          Autofill with Test User
         </button>
       </form>
     </section>

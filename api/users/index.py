@@ -26,6 +26,7 @@ def create_db():
 		conn.commit()
 		global db_flag
 		db_flag = True
+		create_demo_user()
 		return conn
 	except Exception as e:
 		print("Error in create_db:", e)
@@ -49,8 +50,50 @@ def clear():
 	if os.path.exists(db_name):
 		os.remove(db_name)
 	create_db()
+	create_demo_user()
 	print("Data base has been cleared and recreated")
 	return "The database has been cleared"
+
+
+def create_demo_user():
+	"""Create a demo user for the application."""
+	try:
+		if is_unique_username("demo"):
+			# arguments are valid
+			salt = "frontend-salt"
+			pre_hashed = ("Password123" + salt).encode("utf-8")
+			password_hash = hashlib.sha256(pre_hashed).hexdigest()
+
+			# store user info in the database
+			conn = get_db()
+			curr = conn.cursor()
+
+			curr.execute("""
+				INSERT INTO users VALUES(?,?,?,?,?,?,?,?);
+				""",("demo@example.com", "Demo", "User", "demo",
+					 salt, 0, 0, 0))
+
+			curr.execute("""
+				INSERT INTO passwords VALUES(?,?,?);
+				""", ("demo@example.com", password_hash, 1))
+
+			conn.commit()
+			conn.close()
+
+			# Add initial deposit
+			requests.post(
+				f"{request.host_url}/api/payments/init_balance",
+				data = {"username": "demo",
+						"amount_cents": 10000
+						}
+			)
+	except Exception as e:
+		print("Error in create_demo_user:", e)
+		try:
+			conn.close()
+		except:
+			pass
+
 
 
 def is_valid_password(username, password, first_name, last_name):
@@ -173,11 +216,11 @@ def create_user():
 
 	# before storing any data, we validate all data
 	if not is_unique_username(username):
-		status = 2
+		return json.dumps({"status": 2, "error": "Username is already taken."})
 	elif not is_unique_email(email_address):
-		status = 3
+		return json.dumps({"status": 3, "error": "Email is already registered."})
 	elif not is_valid_password(username, password, first_name, last_name):
-		status = 4
+		return json.dumps({"status": 4, "error": "Password does not meet the requirements."})
 	else:
 		status = 1
 
@@ -431,7 +474,7 @@ def login():
 		jwt = generate_jwt(username)
 		return json.dumps({"status": 1, "jwt": jwt})
 	else:
-		return json.dumps({"status": 2, "jwt": "NULL"})
+		return json.dumps({"status": 2, "error": "Invalid username or password."})
 
 
 def get_user_record(username):
