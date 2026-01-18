@@ -32,6 +32,7 @@ def create_db():
 		conn.commit()
 		global db_flag
 		db_flag = True
+		create_demo_user_balance()
 		return conn
 	except Exception as e:
 		print("Error in create_db:", e)
@@ -57,8 +58,36 @@ def clear():
 	if os.path.exists(db_name):
 		os.remove(db_name)
 	create_db()
+	create_demo_user_balance()
 	print("Database has been cleared and recreated")
 	return "The database has been cleared"
+
+
+def create_demo_user_balance():
+	"""Create a balance for the demo user."""
+	try:
+		conn = get_db()
+		curr = conn.cursor()
+
+		# make sure user doesn't already exist
+		curr.execute("""
+			SELECT username FROM balances WHERE username = ?;
+			""","demo",))
+		result = curr.fetchone()
+		if not result:
+			curr.execute("""
+				INSERT INTO balances VALUES(?,?);
+				""","demo", 10000))
+
+		conn.commit()
+		conn.close()
+	except Exception as e:
+		print("Error in create_demo_user_balance:", e)
+		try:
+			conn.close()
+		except:
+			pass
+
 
 @app.route('/api/payments/init_balance', methods=['POST'])
 def init_balance():

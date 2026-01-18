@@ -79,14 +79,6 @@ def create_demo_user():
 
 			conn.commit()
 			conn.close()
-
-			# Add initial deposit
-			requests.post(
-				f"{request.host_url}/api/payments/init_balance",
-				data = {"username": "demo",
-						"amount_cents": 10000
-						}
-			)
 	except Exception as e:
 		print("Error in create_demo_user:", e)
 		try:
