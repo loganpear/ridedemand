@@ -45,7 +45,7 @@ def get_db() -> sqlite3.Connection:
 	return conn
 
 
-@app.route('/clear', methods=['GET'])
+@app.route('/api/reservations/clear', methods=['GET'])
 def clear() -> str:
 	if os.path.exists(db_name):
 		os.remove(db_name)
@@ -56,7 +56,7 @@ def clear() -> str:
 # ALL OF THE ABOVE IS PRETTY MUCH THE SAME FOR EVERY MICRO SERVICE
 
 
-@app.route('/check_reservation', methods=['GET'])
+@app.route('/api/reservations/check_reservation', methods=['GET'])
 def check_reservation():
 	"""
 	Internal func to check if the two users have a reservation togeather
@@ -89,7 +89,7 @@ def check_reservation():
 		return json.dumps({"status": 0})
 
 
-@app.route('/reserve', methods=['POST'])
+@app.route('/api/reservations/reserve', methods=['POST'])
 def reserve():
 	""""""
 	listingid = request.form.get("listingid")
@@ -171,7 +171,7 @@ def reserve():
 		return json.dumps({"status": 3})
 
 
-@app.route('/view', methods=['GET'])
+@app.route('/api/reservations/view', methods=['GET'])
 def view():
 	""""""
 	jwt = request.headers.get('Authorization')
@@ -181,7 +181,7 @@ def view():
 
 	# find out if driver or rider
 	driver_result = requests.get(
-		"http://user:5000/get_driver_status",
+		f"{request.host_url}/api/users/get_driver_status",
 		params={"username": username}
 	).json().get("driver")
 	if driver_result == 1:

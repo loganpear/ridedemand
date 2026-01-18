@@ -51,7 +51,7 @@ def get_db():
 	return conn
 
 
-@app.route('/clear', methods=['GET'])
+@app.route('/api/payments/clear', methods=['GET'])
 def clear():
 	"""Reset the payments database by deleting and recreating the file."""
 	if os.path.exists(db_name):
@@ -60,7 +60,7 @@ def clear():
 	print("Database has been cleared and recreated")
 	return "The database has been cleared"
 
-@app.route('/init_balance', methods=['POST'])
+@app.route('/api/payments/init_balance', methods=['POST'])
 def init_balance():
 	"""Internal endpoint to initialize a new user's starting balance."""
 	username = request.form.get("username")
@@ -98,7 +98,7 @@ def init_balance():
 		return json.dumps({"status": 2})
 
 
-@app.route('/add', methods=['POST'])
+@app.route('/api/payments/add', methods=['POST'])
 def add():
 	"""Add money to the authenticated user's account if they already exist."""
 	amount_str = request.form.get("amount")
@@ -139,7 +139,7 @@ def add():
 		return json.dumps({"status": 2})
 
 
-@app.route('/view', methods=['GET'])
+@app.route('/api/payments/view', methods=['GET'])
 def view():
 	"""Return the authenticated user's current balance in dollars."""
 	jwt = request.headers.get('Authorization')
@@ -171,7 +171,7 @@ _db()
 		return json.dumps({"status": 2, "balance": "NULL"})
 
 
-@app.route('/transfer', methods=['POST'])
+@app.route('/api/payments/transfer', methods=['POST'])
 def transfer():
 	"""
 	Internal endpoint: transfer funds from rider to driver if rider has enough.

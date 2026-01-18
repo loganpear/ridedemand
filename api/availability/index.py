@@ -54,7 +54,7 @@ def get_db() -> sqlite3.Connection:
 	return conn
 
 
-@app.route('/clear', methods=['GET'])
+@app.route('/api/availability/clear', methods=['GET'])
 def clear() -> str:
 	"""Reset the availability database by deleting and recreating the file."""
 	if os.path.exists(db_name):
@@ -63,7 +63,7 @@ def clear() -> str:
 	logger.info("Database has been cleared and recreated")
 	return "The database has been cleared"
 
-@app.route('/listing', methods=['POST'])
+@app.route('/api/availability/listing', methods=['POST'])
 def listing() -> str:
 	"""
 	Create a new availability listing for a driver on a specific date.
@@ -117,7 +117,7 @@ def listing() -> str:
 		return json.dumps({"status": 2, "error": "INTERNAL_ERROR"})
 
 
-@app.route('/search', methods=['GET'])
+@app.route('/api/availability/search', methods=['GET'])
 def search() -> str:
 	"""
 	Search for available ride listings on a specific date for an authenticated user.
@@ -191,7 +191,7 @@ def search() -> str:
 		return json.dumps({"status": 2, "error": "INTERNAL_ERROR", "data": []})
 
 
-@app.route('/get_driver_price', methods=['GET'])
+@app.route('/api/availability/get_driver_price', methods=['GET'])
 def get_driver_price() -> str:
 	"""Internal helper to return (driver_username, price_cents, ride_date, ride_time) for a listing."""
 	listingid = request.args.get("listingid")
@@ -221,7 +221,7 @@ def get_driver_price() -> str:
 		return json.dumps({"status": 2, "error": "INTERNAL_ERROR", "data": None})
 
 
-@app.route('/remove_availability', methods=['POST'])
+@app.route('/api/availability/remove_availability', methods=['POST'])
 def remove_availability() -> str:
 	"""Internal helper to delete a listing once a reservation is made."""
 	listingid = request.form.get("listingid")

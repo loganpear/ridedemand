@@ -44,7 +44,7 @@ def get_db():
 	return conn
 
 
-@app.route('/clear', methods=['GET'])
+@app.route('/api/users/clear', methods=['GET'])
 def clear():
 	if os.path.exists(db_name):
 		os.remove(db_name)
@@ -160,7 +160,7 @@ def is_unique_username(suspect_username):
 	return False
 
 
-@app.route('/create_user', methods=['POST'])
+@app.route('/api/users/create_user', methods=['POST'])
 def create_user():
 	first_name = request.form.get("first_name")
 	last_name = request.form.get("last_name")
@@ -228,7 +228,7 @@ def create_user():
 		return json.dumps({"status": status, "pass_hash": password_hash})
 
 
-@app.route('/rate', methods=['POST'])
+@app.route('/api/users/rate', methods=['POST'])
 def rate():
 	username_to_rate = request.form.get("username")
 	rating_int = int(request.form.get("rating"))
@@ -283,7 +283,7 @@ def rate():
 		return json.dumps({"status": 2})
 
 
-@app.route('/get_average_rating', methods=['GET'])
+@app.route('/api/users/get_average_rating', methods=['GET'])
 def get_average_rating():
 	"""Internal funk to get users average rating"""
 	username = request.args.get("username")
@@ -314,7 +314,7 @@ def get_average_rating():
 		return json.dumps({"avg": None})
 
 
-@app.route('/get_driver_status', methods=['GET'])
+@app.route('/api/users/get_driver_status', methods=['GET'])
 def get_driver_status():
 	"""Internal funk to get 1 if user is driver or 0 if not"""
 	username = request.args.get("username")
@@ -342,7 +342,7 @@ def get_driver_status():
 		return json.dumps({"driver": None})
 
 
-@app.route('/set_driver_status', methods=['POST'])
+@app.route('/api/users/set_driver_status', methods=['POST'])
 def set_driver_status():
 	"""
 	Update the driver's status (1 for driver, 0 for rider) for the authenticated user.
@@ -422,7 +422,7 @@ def password_correct(username, password):
 	return False
 
 
-@app.route('/login', methods=['POST'])
+@app.route('/api/users/login', methods=['POST'])
 def login():
 	username = request.form.get("username")
 	password = request.form.get("password")
@@ -508,7 +508,7 @@ def update_username(curr_username, new_username):
 			pass
 
 
-@app.route('/update', methods=['POST'])
+@app.route('/api/users/update', methods=['POST'])
 def update():
 	curr_username = request.form.get("username")
 	new_username = request.form.get("new_username")
@@ -544,7 +544,7 @@ def update():
 	return json.dumps({"status": 2})
 
 
-@app.route('/view', methods=['POST'])
+@app.route('/api/users/view', methods=['POST'])
 def view():
 	jwt_post = request.form.get("jwt")
 	if not is_valid_jwt(jwt_post):
