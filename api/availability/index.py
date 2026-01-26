@@ -15,7 +15,7 @@ from typing import Optional
 import requests
 from flask import Flask, request
 
-from api.common.auth import get_username_from_jwt, is_valid_jwt
+from api.common.auth import decode_jwt, extract_token_from_header
 from api.common.clients import get_service_base_url
 
 logger = logging.getLogger(__name__)
@@ -90,14 +90,16 @@ def listing() -> str:
 	ride_time = request.form.get("ride_time")
 	price_cents = int(float(request.form.get("price")) * 100)
 	listing_id = request.form.get("listingid")
-	jwt = request.headers.get('Authorization')
+	auth_header = request.headers.get('Authorization')
+	token = extract_token_from_header(auth_header)
 
 	if not ride_date or not ride_time or not listing_id:
 		return json.dumps({"status": 2, "error": "INVALID_INPUT"})
 
-	if not is_valid_jwt(jwt):
+	payload = decode_jwt(token)
+	if not payload or "sub" not in payload:
 		return json.dumps({"status": 2, "error": "UNAUTHORIZED"})
-	username = get_username_from_jwt(jwt) or ""
+	username = payload["sub"]
 
 	conn: Optional[sqlite3.Connection] = None
 	try:
@@ -141,12 +143,14 @@ def search() -> str:
 	"""
 	ride_date = request.args.get("ride_date")
 	ride_time = request.args.get("ride_time")
-	jwt = request.headers.get('Authorization')
+	auth_header = request.headers.get('Authorization')
+	token = extract_token_from_header(auth_header)
 	listings = []
 
-	if not is_valid_jwt(jwt):
+	payload = decode_jwt(token)
+	if not payload or "sub" not in payload:
 		return json.dumps({"status": 2, "error": "UNAUTHORIZED", "data": listings})
-	rider_username = get_username_from_jwt(jwt)
+	rider_username = payload["sub"]
 
 	conn: Optional[sqlite3.Connection] = None
 	try:

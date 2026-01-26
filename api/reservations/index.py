@@ -7,7 +7,7 @@ from typing import Optional
 import requests
 from flask import Flask, request
 
-from api.common.auth import get_username_from_jwt, is_valid_jwt
+from api.common.auth import decode_jwt, extract_token_from_header
 from api.common.clients import get_service_base_url
 
 logger = logging.getLogger(__name__)
@@ -106,11 +106,13 @@ def check_reservation():
 def reserve():
 	""""""
 	listingid = request.form.get("listingid")
-	jwt = request.headers.get('Authorization')
+	auth_header = request.headers.get('Authorization')
+	token = extract_token_from_header(auth_header)
 
-	if not is_valid_jwt(jwt):
+	payload = decode_jwt(token)
+	if not payload or "sub" not in payload:
 		return json.dumps({"status": 2})
-	rider_username = get_username_from_jwt(jwt)
+	rider_username = payload["sub"]
 
 	try:
 		users_service_url = get_service_base_url("USERS_SERVICE_URL", default=request.host_url)
@@ -191,10 +193,12 @@ def reserve():
 @app.route('/api/reservations/view', methods=['GET'])
 def view():
 	""""""
-	jwt = request.headers.get('Authorization')
-	if not is_valid_jwt(jwt):
+	auth_header = request.headers.get('Authorization')
+	token = extract_token_from_header(auth_header)
+	payload = decode_jwt(token)
+	if not payload or "sub" not in payload:
 		return json.dumps({"status": 2, "data": "NULL"})
-	username = get_username_from_jwt(jwt)
+	username = payload["sub"]
 	users_service_url = get_service_base_url("USERS_SERVICE_URL", default=request.host_url)
 
 	# find out if driver or rider

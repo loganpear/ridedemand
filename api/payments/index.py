@@ -12,7 +12,7 @@ import sqlite3
 import requests
 from flask import Flask, request
 
-from api.common.auth import get_username_from_jwt, is_valid_jwt
+from api.common.auth import decode_jwt, extract_token_from_header
 
 app = Flask(__name__)
 db_name = "/tmp/payments.db"
@@ -142,11 +142,13 @@ def init_balance():
 def add():
 	"""Add money to the authenticated user's account if they already exist."""
 	amount_str = request.form.get("amount")
-	jwt = request.headers.get('Authorization')
+	auth_header = request.headers.get('Authorization')
+	token = extract_token_from_header(auth_header)
 
-	if not is_valid_jwt(jwt):
+	payload = decode_jwt(token)
+	if not payload or "sub" not in payload:
 		return json.dumps({"status": 2})
-	username = get_username_from_jwt(jwt)
+	username = payload["sub"]
 
 	try:
 		conn = get_db()
@@ -182,11 +184,13 @@ def add():
 @app.route('/api/payments/view', methods=['GET'])
 def view():
 	"""Return the authenticated user's current balance in dollars."""
-	jwt = request.headers.get('Authorization')
+	auth_header = request.headers.get('Authorization')
+	token = extract_token_from_header(auth_header)
 
-	if not is_valid_jwt(jwt):
+	payload = decode_jwt(token)
+	if not payload or "sub" not in payload:
 		return json.dumps({"status": 2, "balance": "NULL"})
-	username = get_username_from_jwt(jwt)
+	username = payload["sub"]
 
 	try:
 		conn = get_db()

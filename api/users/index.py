@@ -6,7 +6,7 @@ import hashlib
 import requests
 from flask import Flask, request
 
-from api.common.auth import generate_jwt, get_username_from_jwt, is_valid_jwt
+from api.common.auth import generate_jwt, decode_jwt, extract_token_from_header
 from api.common.clients import get_service_base_url
 
 app = Flask(__name__)
@@ -282,11 +282,13 @@ def create_user():
 def rate():
 	username_to_rate = request.form.get("username")
 	rating_int = int(request.form.get("rating"))
-	jwt = request.headers.get('Authorization')
+	auth_header = request.headers.get('Authorization')
+	token = extract_token_from_header(auth_header)
 
-	if not is_valid_jwt(jwt):
+	payload = decode_jwt(token)
+	if not payload or "sub" not in payload:
 		return json.dumps({"status": 2})
-	username_acting = get_username_from_jwt(jwt)
+	username_acting = payload["sub"]
 
 	if not username_to_rate or username_acting == username_to_rate:
 		return json.dumps({"status": 2})
@@ -401,9 +403,11 @@ def set_driver_status():
 	"""
 	username = request.form.get("username")
 	driver_bool = request.form.get("driver")
-	jwt = request.headers.get('Authorization')
+	auth_header = request.headers.get('Authorization')
+	token = extract_token_from_header(auth_header)
 
-	if not is_valid_jwt(jwt, username):
+	payload = decode_jwt(token, expected_username=username)
+	if not payload:
 		return json.dumps({"status": 2})
 
 	if driver_bool and driver_bool.lower() == "true":
@@ -565,19 +569,20 @@ def update():
 	new_username = request.form.get("new_username")
 	curr_password = request.form.get("password")
 	new_password = request.form.get("new_password")
-	jwt_post = request.form.get("jwt")
+	auth_header = request.headers.get('Authorization')
+	token = extract_token_from_header(auth_header)
 
-	if not is_valid_jwt(jwt_post, curr_username):
+	payload = decode_jwt(token, expected_username=curr_username)
+	if not payload:
 		return json.dumps({"status": 3})
 
 	# get confirmed username from jwt so we know this one's correct
-	username_confirmed = get_username_from_jwt(jwt_post)
+	username_confirmed = payload["sub"]
 
 	if new_username:
-		if curr_username == username_confirmed:
-			if is_unique_username(new_username):
-				update_username(curr_username, new_username)
-				return json.dumps({"status": 1})
+		if is_unique_username(new_username):
+			update_username(username_confirmed, new_username)
+			return json.dumps({"status": 1})
 
 	elif new_password:
 		if password_correct(username_confirmed, curr_password):
@@ -597,11 +602,14 @@ def update():
 
 @app.route('/api/users/view', methods=['POST'])
 def view():
-	jwt_post = request.form.get("jwt")
-	if not is_valid_jwt(jwt_post):
+	auth_header = request.headers.get('Authorization')
+	token = extract_token_from_header(auth_header)
+
+	payload = decode_jwt(token)
+	if not payload or "sub" not in payload:
 		return json.dumps({"status": 2, "data": "NULL"})
 
-	username = get_username_from_jwt(jwt_post)
+	username = payload["sub"]
 	user = get_user_record(username)
 	if not user:
 		return json.dumps({"status": 2, "data": "NULL"})

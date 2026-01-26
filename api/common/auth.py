@@ -2,100 +2,82 @@
 Shared authentication and JWT utilities for the ridedemand microservices.
 
 All services trust the same HMAC signing key so they can validate tokens
-issued by the user service.
+issued by the user service. This implementation uses PyJWT to create and
+validate tokens according to industry standards.
 """
-
-import base64
-import hashlib
-import hmac
-import json
 import logging
 import os
+from datetime import datetime, timedelta, timezone
+from typing import Optional
 
+import jwt
 
 logger = logging.getLogger(__name__)
 
 
-def _get_signing_key() -> bytes:
-	"""
-	Return the HMAC signing key for JWTs.
+def _get_signing_key() -> str:
+    """
+    Return the HMAC signing key for JWTs.
 
-	The key MUST be set in the JWT_SECRET environment variable.
-	"""
-	secret = os.getenv("JWT_SECRET")
-	if not secret:
-		raise ValueError("JWT_SECRET environment variable not set")
-	return secret.encode("utf-8")
-
-
-def get_signature(header_b64: str, payload_b64: str) -> str:
-	"""Generate a hexadecimal HMAC-SHA256 signature for a JWT header and payload."""
-	key = _get_signing_key()
-	hasher = hmac.new(key, digestmod=hashlib.sha256)
-	hasher.update(f"{header_b64}.{payload_b64}".encode("utf-8"))
-	return hasher.hexdigest()
+    The key MUST be set in the JWT_SECRET environment variable.
+    """
+    secret = os.getenv("JWT_SECRET")
+    if not secret:
+        raise ValueError("JWT_SECRET environment variable not set")
+    return secret
 
 
 def generate_jwt(username: str) -> str:
-	"""Generate a simple JWT that encodes a username."""
-	header_bytes = json.dumps({
-		"alg": "HS256",
-		"typ": "JWT",
-	}).encode("utf-8")
+    """
+    Generate a JWT that encodes the username and has a 1-hour expiration.
 
-	payload_bytes = json.dumps({
-		"username": username,
-	}).encode("utf-8")
-
-	header_b64 = base64.urlsafe_b64encode(header_bytes).decode("utf-8")
-	payload_b64 = base64.urlsafe_b64encode(payload_bytes).decode("utf-8")
-
-	signature = get_signature(header_b64, payload_b64)
-	return f"{header_b64}.{payload_b64}.{signature}"
-
-
-def is_valid_jwt(jwt: str, login_username: str | None = None) -> bool:
-	"""
-	Decode the JWT to validate it.
-
-	If login_username is provided, ensure the token was issued for that username.
-	"""
-	try:
-		if not jwt:
-			return False
-		jwt_list = jwt.split('.')
-		if len(jwt_list) != 3:
-			return False
-		header_b64 = jwt_list[0]
-		payload_b64 = jwt_list[1]
-		signature = jwt_list[2]
-
-		real_signature = get_signature(header_b64, payload_b64)
-		if signature != real_signature:
-			return False
-
-		payload_json = base64.urlsafe_b64decode(payload_b64).decode("utf-8")
-		payload_dict = json.loads(payload_json)
-
-		if "username" not in payload_dict:
-			return False
-		if login_username and payload_dict["username"] != login_username:
-			return False
-		return True
-	except Exception:
-		logger.exception("Error in is_valid_jwt")
-		return False
+    Claims:
+    - sub: username
+    - iat: issued at time
+    - exp: expiration time
+    """
+    now = datetime.now(timezone.utc)
+    payload = {
+        "sub": username,
+        "iat": now,
+        "exp": now + timedelta(hours=1),
+    }
+    return jwt.encode(payload, _get_signing_key(), algorithm="HS256")
 
 
-def get_username_from_jwt(jwt: str) -> str | None:
-	"""Extract and return the username from a JWT, or None on error."""
-	try:
-		jwt_list = jwt.split('.')
-		payload_b64 = jwt_list[1]
-		payload_json = base64.urlsafe_b64decode(payload_b64).decode("utf-8")
-		payload_dict = json.loads(payload_json)
-		return payload_dict["username"]
-	except Exception:
-		logger.exception("Error in get_username_from_jwt")
-		return None
+def decode_jwt(token: str, expected_username: Optional[str] = None) -> Optional[dict]:
+    """
+    Decode and validate a JWT, returning its payload if valid.
 
+    Validation checks:
+    - Signature
+    - Expiration
+    - Username (`sub` claim) if `expected_username` is provided.
+
+    Returns the payload dictionary on success, None on failure.
+    """
+
+    try:
+        payload = jwt.decode(token, _get_signing_key(), algorithms=["HS256"])
+        if expected_username and payload.get("sub") != expected_username:
+            logger.warning("JWT 'sub' claim does not match expected username.")
+            return None
+        return payload
+    except jwt.ExpiredSignatureError:
+        logger.warning("Expired JWT received.")
+        return None
+    except jwt.InvalidTokenError:
+        logger.warning("Invalid JWT received.", exc_info=True)
+        return None
+
+
+def get_username_from_jwt(token: str) -> Optional[str]:
+    """Extract and return the username from a JWT, or None on error."""
+    payload = decode_jwt(token)
+    return payload.get("sub") if payload else None
+
+def extract_token_from_header(header: str) -> Optional[str]:
+    """Extract the token from an 'Authorization: Bearer <token>' header."""
+    if not header or not header.startswith("Bearer "):
+        return None
+    return header.split(" ")[1]
