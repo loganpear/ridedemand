@@ -7,6 +7,7 @@ import requests
 from flask import Flask, request
 
 from api.common.auth import generate_jwt, get_username_from_jwt, is_valid_jwt
+from api.common.clients import get_service_base_url
 
 app = Flask(__name__)
 db_name = "/tmp/user.db"
@@ -260,8 +261,9 @@ def create_user():
 
 			# Add initial deposit
 			deposit_int = int(float(deposit) * 100)
+			payments_service_url = get_service_base_url("PAYMENTS_SERVICE_URL", default=request.host_url)
 			requests.post(
-				f"{request.host_url}/api/payments/init_balance",
+				f"{payments_service_url}/api/payments/init_balance",
 				data = {"username": username,
 						"amount_cents": deposit_int
 						}
@@ -292,9 +294,10 @@ def rate():
 		return json.dumps({"status": 2})
 
 	try:
+		reservations_service_url = get_service_base_url("RESERVATIONS_SERVICE_URL", default=request.host_url)
 		# check that the user has a reservation with the one theire rating
 		data = requests.get(
-			f"{request.host_url}/api/reservations/check_reservation",
+			f"{reservations_service_url}/api/reservations/check_reservation",
 			params={"username1": username_acting, "username2": username_to_rate}
 		).json()
 		if data.get("status") == 0:

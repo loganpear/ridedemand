@@ -8,6 +8,7 @@ import requests
 from flask import Flask, request
 
 from api.common.auth import get_username_from_jwt, is_valid_jwt
+from api.common.clients import get_service_base_url
 
 logger = logging.getLogger(__name__)
 
@@ -112,9 +113,13 @@ def reserve():
 	rider_username = get_username_from_jwt(jwt)
 
 	try:
+		users_service_url = get_service_base_url("USERS_SERVICE_URL", default=request.host_url)
+		availability_service_url = get_service_base_url("AVAILABILITY_SERVICE_URL", default=request.host_url)
+		payments_service_url = get_service_base_url("PAYMENTS_SERVICE_URL", default=request.host_url)
+
 		# check that the user is a rider
 		rider_result = requests.get(
-			f"{request.host_url}/api/users/get_driver_status",
+			f"{users_service_url}/api/users/get_driver_status",
 			params={"username": rider_username}
 		).json()
 		if rider_result.get("driver") != 0:
@@ -122,7 +127,7 @@ def reserve():
 
 		# check availability and get driver_username, price, date, and time
 		availability_payload = requests.get(
-			f"{request.host_url}/api/availability/get_driver_price",
+			f"{availability_service_url}/api/availability/get_driver_price",
 			params={"listingid": listingid}
 		).json()
 		availability_result = availability_payload.get("data")
@@ -132,7 +137,7 @@ def reserve():
 
 		# check that user has enough money, if so transfer money to driver
 		transfer_result = requests.post(
-			f"{request.host_url}/api/payments/transfer",
+			f"{payments_service_url}/api/payments/transfer",
 			data={"price_cents": price_cents,
 				  "rider_username": rider_username,
 				  "driver_username": driver_username
@@ -143,7 +148,7 @@ def reserve():
 
 		# remove availability
 		requests.post(
-			f"{request.host_url}/api/availability/remove_availability",
+			f"{availability_service_url}/api/availability/remove_availability",
 			data={"listingid": listingid}
 		)
 
@@ -190,10 +195,11 @@ def view():
 	if not is_valid_jwt(jwt):
 		return json.dumps({"status": 2, "data": "NULL"})
 	username = get_username_from_jwt(jwt)
+	users_service_url = get_service_base_url("USERS_SERVICE_URL", default=request.host_url)
 
 	# find out if driver or rider
 	driver_result = requests.get(
-		f"{request.host_url}/api/users/get_driver_status",
+		f"{users_service_url}/api/users/get_driver_status",
 		params={"username": username}
 	).json().get("driver")
 	if driver_result == 1:
@@ -223,7 +229,7 @@ def view():
 		price = result[1] / 100
 		opposite_username = result[2]
 		rating_result = requests.get(
-			f"{request.host_url}/api/users/get_average_rating",
+			f"{users_service_url}/api/users/get_average_rating",
 			params={"username": opposite_username}
 		).json().get("avg")
 		avg = rating_result if rating_result else "0.00"

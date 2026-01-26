@@ -16,6 +16,7 @@ import requests
 from flask import Flask, request
 
 from api.common.auth import get_username_from_jwt, is_valid_jwt
+from api.common.clients import get_service_base_url
 
 logger = logging.getLogger(__name__)
 
@@ -101,8 +102,9 @@ def listing() -> str:
 	conn: Optional[sqlite3.Connection] = None
 	try:
 		# ensure the user is valid and a driver
+		users_service_url = get_service_base_url("USERS_SERVICE_URL", default=request.host_url)
 		data = requests.get(
-			f"{request.host_url}/api/users/get_driver_status",
+			f"{users_service_url}/api/users/get_driver_status",
 			params={"username": username}
 		).json()
 		if data.get("driver") != 1:
@@ -148,9 +150,10 @@ def search() -> str:
 
 	conn: Optional[sqlite3.Connection] = None
 	try:
+		users_service_url = get_service_base_url("USERS_SERVICE_URL", default=request.host_url)
 		# ensure the user exists (drivers and riders can both search)
 		data = requests.get(
-			f"{request.host_url}/api/users/get_driver_status",
+			f"{users_service_url}/api/users/get_driver_status",
 			params={"username": rider_username}
 		).json()
 		driver_flag = data.get("driver")
@@ -178,7 +181,7 @@ def search() -> str:
 			driver_username = tup[2]
 			# get avg rating of each driver
 			data = requests.get(
-				f"{request.host_url}/api/users/get_average_rating",
+				f"{users_service_url}/api/users/get_average_rating",
 				params={"username": driver_username}
 			).json()
 			avg = data.get("avg") if data.get("avg") else "0.00"

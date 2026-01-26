@@ -21,6 +21,7 @@ services:
     environment:
       - PAYMENTS_SERVICE_URL=http://payments:5000
       - RESERVATIONS_SERVICE_URL=http://reservations:5000
+      - USERS_SERVICE_URL=http://users:5000
       - JWT_SECRET=${JWT_SECRET}
   availability:
     build:
@@ -33,7 +34,8 @@ services:
     networks:
       - ridedemand
     environment:
-      - USER_SERVICE_URL=http://users:5000
+      - USERS_SERVICE_URL=http://users:5000
+      - AVAILABILITY_SERVICE_URL=http://availability:5000
       - JWT_SECRET=${JWT_SECRET}
   reservations:
     build:
@@ -46,9 +48,10 @@ services:
     networks:
       - ridedemand
     environment:
-      - USER_SERVICE_URL=http://users:5000
+      - USERS_SERVICE_URL=http://users:5000
       - AVAILABILITY_SERVICE_URL=http://availability:5000
       - PAYMENTS_SERVICE_URL=http://payments:5000
+      - RESERVATIONS_SERVICE_URL=http://reservations:5000
       - JWT_SECRET=${JWT_SECRET}
   payments:
     build:
@@ -61,6 +64,7 @@ services:
     networks:
       - ridedemand
     environment:
+      - PAYMENTS_SERVICE_URL=http://payments:5000
       - JWT_SECRET=${JWT_SECRET}
 
 networks:
