@@ -45,13 +45,25 @@ def get_db() -> sqlite3.Connection:
 	return conn
 
 
-@app.route('/api/reservations/clear', methods=['GET'])
-def clear() -> str:
+@app.route('/api/reservations/clear', methods=['POST'])
+def clear() -> tuple[str, int]:
+	"""
+	Reset the reservations database. Gated for development use.
+
+	To use, set ALLOW_DEV_CLEAR=true and pass a valid X-Admin-Token header.
+	"""
+	if os.getenv("ALLOW_DEV_CLEAR") != "true":
+		return "Clear endpoint is disabled", 403
+
+	admin_token = os.getenv("ADMIN_TOKEN")
+	if not admin_token or request.headers.get("X-Admin-Token") != admin_token:
+		return "Forbidden", 403
+
 	if os.path.exists(db_name):
 		os.remove(db_name)
 	create_db()
-	logger.info("Data base has been cleared and recreated")
-	return "The database has been cleared"
+	logger.info("Database has been cleared and recreated")
+	return "The database has been cleared", 200
 #
 # ALL OF THE ABOVE IS PRETTY MUCH THE SAME FOR EVERY MICRO SERVICE
 

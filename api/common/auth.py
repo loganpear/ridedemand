@@ -20,14 +20,12 @@ def _get_signing_key() -> bytes:
 	"""
 	Return the HMAC signing key for JWTs.
 
-	For realism, we first check the JWT_SECRET environment variable and fall
-	back to reading from key.txt for local development.
+	The key MUST be set in the JWT_SECRET environment variable.
 	"""
 	secret = os.getenv("JWT_SECRET")
-	if secret:
-		return secret.encode("utf-8")
-	with open("key.txt", "r") as key_file:
-		return key_file.read().encode("utf-8")
+	if not secret:
+		raise ValueError("JWT_SECRET environment variable not set")
+	return secret.encode("utf-8")
 
 
 def get_signature(header_b64: str, payload_b64: str) -> str:

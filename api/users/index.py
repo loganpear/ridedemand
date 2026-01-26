@@ -45,13 +45,25 @@ def get_db():
 	return conn
 
 
-@app.route('/api/users/clear', methods=['GET'])
-def clear():
+@app.route('/api/users/clear', methods=['POST'])
+def clear() -> tuple[str, int]:
+	"""
+	Reset the users database. Gated for development use.
+
+	To use, set ALLOW_DEV_CLEAR=true and pass a valid X-Admin-Token header.
+	"""
+	if os.getenv("ALLOW_DEV_CLEAR") != "true":
+		return "Clear endpoint is disabled", 403
+
+	admin_token = os.getenv("ADMIN_TOKEN")
+	if not admin_token or request.headers.get("X-Admin-Token") != admin_token:
+		return "Forbidden", 403
+
 	if os.path.exists(db_name):
 		os.remove(db_name)
 	create_db()
 	print("Data base has been cleared and recreated")
-	return "The database has been cleared"
+	return "The database has been cleared", 200
 
 
 def create_demo_user():

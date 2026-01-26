@@ -52,15 +52,26 @@ def get_db():
 	return conn
 
 
-@app.route('/api/payments/clear', methods=['GET'])
-def clear():
-	"""Reset the payments database by deleting and recreating the file."""
+@app.route('/api/payments/clear', methods=['POST'])
+def clear() -> tuple[str, int]:
+	"""
+	Reset the payments database. Gated for development use.
+
+	To use, set ALLOW_DEV_CLEAR=true and pass a valid X-Admin-Token header.
+	"""
+	if os.getenv("ALLOW_DEV_CLEAR") != "true":
+		return "Clear endpoint is disabled", 403
+
+	admin_token = os.getenv("ADMIN_TOKEN")
+	if not admin_token or request.headers.get("X-Admin-Token") != admin_token:
+		return "Forbidden", 403
+
 	if os.path.exists(db_name):
 		os.remove(db_name)
 	create_db()
 	create_demo_user_balance()
 	print("Database has been cleared and recreated")
-	return "The database has been cleared"
+	return "The database has been cleared", 200
 
 
 def create_demo_user_balance():
@@ -178,7 +189,7 @@ def view():
 	username = get_username_from_jwt(jwt)
 
 	try:
-_db()
+		conn = get_db()
 		curr = conn.cursor()
 
 		curr.execute("""

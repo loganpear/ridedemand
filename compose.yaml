@@ -1,0 +1,68 @@
+services:
+  frontend:
+    container_name: frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "5173:5173"
+    networks:
+      - ridedemand
+  users:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        service_dir: users
+    ports:
+      - "5001:5000"
+    networks:
+      - ridedemand
+    environment:
+      - PAYMENTS_SERVICE_URL=http://payments:5000
+      - RESERVATIONS_SERVICE_URL=http://reservations:5000
+      - JWT_SECRET=${JWT_SECRET}
+  availability:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        service_dir: availability
+    ports:
+      - "5002:5000"
+    networks:
+      - ridedemand
+    environment:
+      - USER_SERVICE_URL=http://users:5000
+      - JWT_SECRET=${JWT_SECRET}
+  reservations:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        service_dir: reservations
+    ports:
+      - "5003:5000"
+    networks:
+      - ridedemand
+    environment:
+      - USER_SERVICE_URL=http://users:5000
+      - AVAILABILITY_SERVICE_URL=http://availability:5000
+      - PAYMENTS_SERVICE_URL=http://payments:5000
+      - JWT_SECRET=${JWT_SECRET}
+  payments:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        service_dir: payments
+    ports:
+      - "5004:5000"
+    networks:
+      - ridedemand
+    environment:
+      - JWT_SECRET=${JWT_SECRET}
+
+networks:
+  ridedemand:
+    driver: bridge

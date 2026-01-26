@@ -54,14 +54,25 @@ def get_db() -> sqlite3.Connection:
 	return conn
 
 
-@app.route('/api/availability/clear', methods=['GET'])
-def clear() -> str:
-	"""Reset the availability database by deleting and recreating the file."""
+@app.route('/api/availability/clear', methods=['POST'])
+def clear() -> tuple[str, int]:
+	"""
+	Reset the availability database. Gated for development use.
+
+	To use, set ALLOW_DEV_CLEAR=true and pass a valid X-Admin-Token header.
+	"""
+	if os.getenv("ALLOW_DEV_CLEAR") != "true":
+		return "Clear endpoint is disabled", 403
+
+	admin_token = os.getenv("ADMIN_TOKEN")
+	if not admin_token or request.headers.get("X-Admin-Token") != admin_token:
+		return "Forbidden", 403
+
 	if os.path.exists(db_name):
 		os.remove(db_name)
 	create_db()
 	logger.info("Database has been cleared and recreated")
-	return "The database has been cleared"
+	return "The database has been cleared", 200
 
 @app.route('/api/availability/listing', methods=['POST'])
 def listing() -> str:

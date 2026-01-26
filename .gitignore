@@ -1,10 +1,12 @@
 # Editor / OS junk
 .idea/
 .DS_Store
+__MACOSX/
 
 # Python artifacts
 __pycache__/
 *.pyc
+.pytest_cache/
 
 # Local databases
 *.db
@@ -12,3 +14,12 @@ __pycache__/
 # Virtualenvs
 .venv/
 env/
+
+# Secrets
+.env
+secrets/
+
+# Frontend
+node_modules/
+dist/
+.npm/
